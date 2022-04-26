@@ -2,14 +2,16 @@ from perceptron.layers import *
 from typing import List
 from training_dataset import Data
 
+import numpy as np
+import math
 import random
 
 
 class Perceptron:
     def __init__(self):
-        self.s_layer = SNeuronLayer()
-        self.a_layer = ANeuronLayer()
-        self.r_layer = RNeuronLayer()
+        self.s_layer = SLayer()
+        self.a_layer = ALayer()
+        self.r_layer = RLayer()
 
     def solve(self, inputs: List[int]) -> List[List[int]]:
         s_result = self.s_layer.solve(inputs)
@@ -75,6 +77,13 @@ class Perceptron:
         print('----------------------------')
         print('>>> Starting optimization')
 
+        '''
+        for data in dataset:
+            self.a_layer.solve(data.inputs)
+        for neuron in self.a_layer.neurons:
+            neuron.bias = (neuron.max_acc - neuron.min_acc) * 0.7 + neuron.min_acc
+        '''
+
         activations = []
         for _ in self.a_layer.neurons:
             activations.append([])
@@ -84,24 +93,26 @@ class Perceptron:
                 activations[n_count].append(neuron.solve(a_input))
         to_remove = [False] * len(self.a_layer.neurons)
 
-        a_layer_size = len(self.a_layer.neurons)
-
         print('Dead neurons from A-layer        =', end=' ')
         for i, activation in enumerate(activations):
             zeros = activation.count(0)
-            if zeros == 0 or zeros == a_layer_size:
+            if zeros == 0 or zeros == len(a_inputs):
                 to_remove[i] = True
         dead_neurons = to_remove.count(True)
         print('{:d}'.format(dead_neurons))
 
         print('Correlating neurons from A-layer =', end=' ')
         for i in range(len(activations) - 1):
-            if not to_remove[i]:
-                for j in range(i + 1, len(activations)):
-                    if activations[j] == activations[i]:
-                        to_remove[j] = True
-        correlating_neurons = to_remove.count(True) - dead_neurons
-        print('{:d}'.format(correlating_neurons))
+            if to_remove[i]:
+                continue
+
+            for j in range(i + 1, len(activations)):
+                if to_remove[j]:
+                    continue
+                #if activations[i] == activations[j]:
+                if math.fabs(self.kPirson(activations[i], activations[j])) > 0.8:
+                    to_remove[j] = True
+        print('{:d}'.format(to_remove.count(True) - dead_neurons))
 
         for i in range(len(to_remove) - 1, -1, -1):
             if to_remove[i]:
@@ -110,3 +121,21 @@ class Perceptron:
                     del self.r_layer.neurons[j].input_weights[i]
 
         print('Neurons remaining = {:18d}'.format(len(self.a_layer.neurons)))
+
+    def kPirson(self, v1, v2):
+        v1, v2 = np.array(v1), np.array(v2)
+        v1 = v1 - np.mean(v1)
+        v2 = v2 - np.mean(v2)
+
+        sum1 = np.sum(v1 * v2)
+        sum21 = np.sum(v1 ** 2)
+        sum22 = np.sum(v2 ** 2)
+
+        return sum1 / math.sqrt(sum21 * sum22)
+
+    def getS(self, v):
+        m = np.mean(v)
+        temp = 0
+        for elem in v:
+            temp += (elem - m) ** 2
+        return temp

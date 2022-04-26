@@ -17,7 +17,6 @@ def init_perceptron(dataset: List[Data]) -> Perceptron:
     for _ in range(input_count):
         network.s_layer.add_neuron(None, lambda value: value)
 
-    #a_neurons_count = 2 ** input_count - 1
     a_neurons_count = 700
     for position in range(a_neurons_count):
         neuron = ANeuron(None, lambda value: int(value >= 0))
@@ -39,8 +38,8 @@ def train_perceptron(network: Perceptron, dataset: List[Data]) -> Perceptron:
     :param dataset: training dataset
     :return: modified perceptron
     """
-    network.train(dataset)
     network.optimize(dataset)
+    network.train(dataset)
 
     return network
 
@@ -66,6 +65,7 @@ def test_network(network: Perceptron, test_dataset: List[Data]) -> None:
 
 
 def main():
+    random.seed(10)
     dataset = get_dataset(TRAIN_FILE)
     test_dataset = get_dataset(TEST_FILE)
 

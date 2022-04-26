@@ -1,7 +1,7 @@
 from perceptron.neurons import *
 
 
-class NeuronLayer:
+class Layer:
     def __init__(self):
         self.neurons = []
 
@@ -16,10 +16,8 @@ class NeuronLayer:
         pass
 
 
-class SNeuronLayer(NeuronLayer):
+class SLayer(Layer):
     def add_neuron(self, f_initialize, f_transform) -> None:
-        # f_init: None
-        # f_tr: Callable[[int], int]
         neuron = SNeuron(f_initialize, f_transform)
         self.neurons.append(neuron)
 
@@ -30,7 +28,7 @@ class SNeuronLayer(NeuronLayer):
         return results
 
 
-class ANeuronLayer(NeuronLayer):
+class ALayer(Layer):
     def add_neuron(self, inputs_count, f_initialize, f_activate) -> None:
         neuron = ANeuron(f_initialize, f_activate)
         neuron.init_weights(inputs_count)
@@ -43,7 +41,7 @@ class ANeuronLayer(NeuronLayer):
         return results
 
 
-class RNeuronLayer(NeuronLayer):
+class RLayer(Layer):
     def add_neuron(self, inputs_count: int, f_initialize, f_activate,
                    learning_speed: float, bias: float) -> None:
         neuron = RNeuron(f_initialize, f_activate, learning_speed, bias)

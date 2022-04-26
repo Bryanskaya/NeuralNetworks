@@ -25,12 +25,11 @@ class Neuron:
 
 class ActivationNeuron(Neuron):
     def __init__(self, f_initialize, f_activate):
-        # 1: None
-        # 2: Callable[[int], int]
         super().__init__(f_initialize)
         self.last_inputs = None
         self.last_result = None
         self.activate = f_activate
+        self.max_acc, self.min_acc = -1e+6, 1e+6
 
     def accumulate(self, inputs: List[int]) -> float:
         accumulation = - self.bias
@@ -40,7 +39,12 @@ class ActivationNeuron(Neuron):
 
     def solve(self, inputs: List[int]) -> List[int]:
         self.last_inputs = inputs
-        self.last_result = self.activate(self.accumulate(inputs))
+        temp = self.accumulate(inputs)
+        self.last_result = self.activate(temp)
+
+        self.max_acc = max(self.max_acc, temp)
+        self.min_acc = min(self.min_acc, temp)
+
         return self.last_result
 
 
@@ -55,10 +59,7 @@ class SNeuron(Neuron):
 
 class ANeuron(ActivationNeuron):
     def calculate_bias(self) -> None:
-        self.bias = 0
-        for weight in self.input_weights:
-            if weight > 0:  self.bias += 1
-            elif weight < 0:    self.bias -= 1
+        self.bias = sum(self.input_weights)
 
 
 class RNeuron(ActivationNeuron):
@@ -68,6 +69,7 @@ class RNeuron(ActivationNeuron):
         self.bias = bias
 
     def correct(self, expected_result: int) -> None:
+        # last_input - выход из а-нейрона: 0/1
         if expected_result != self.last_result:
             self.input_weights = [
                 input_weight - self.last_result * self.learning_speed * last_input
